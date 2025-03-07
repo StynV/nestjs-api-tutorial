@@ -4,9 +4,13 @@ import {
   INestApplication,
   ValidationPipe,
 } from '@nestjs/common';
+import { PrismaService } from '../src/prisma/prisma.service';
+import * as pactum from 'pactum';
+import { AuthDto } from 'src/auth/dto';
 
 describe('App e2e', () => {
   let app: INestApplication;
+  let prisma: PrismaService;
 
   beforeAll(async () => {
     const moduleRef =
@@ -22,11 +26,56 @@ describe('App e2e', () => {
     );
 
     await app.init();
+    await app.listen(3333);
+
+    prisma = app.get(PrismaService);
+    await prisma.cleanDb();
+
+    pactum.request.setBaseUrl(
+      'http://localhost:3333',
+    );
   });
 
   afterAll(() => {
     app.close();
   });
 
-  it.todo('should pass');
+  describe('Auth', () => {
+    const dto: AuthDto = {
+      email: 'test@test.com',
+      password: 'password',
+    };
+
+    describe('Signup', () => {
+      it('Should sign up', () => {
+        return pactum
+          .spec()
+          .post('/auth/signup')
+          .withBody(dto)
+          .expectStatus(201);
+      });
+    });
+
+    describe('Signin', () => {
+      it('Should sign in', () => {
+        return pactum
+          .spec()
+          .post('/auth/signin')
+          .withBody(dto)
+          .expectStatus(200);
+      });
+    });
+  });
+
+  // describe('User', () => {
+  //   describe('Get me', () => {});
+  //   describe('Edit user', () => {});
+  // });
+
+  // describe('Bookmarks', () => {
+  //   describe('Create bookmark', () => {});
+  //   describe('Get bookmarks', () => {});
+  //   describe('Get bookmark by id', () => {});
+  //   describe('Edit bookmark', () => {});
+  //   describe('Delet bookmark', () => {});
 });
