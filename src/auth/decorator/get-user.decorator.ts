@@ -4,10 +4,24 @@ import {
 } from '@nestjs/common';
 
 export const GetUser = createParamDecorator(
-  (data: unknown, ctx: ExecutionContext) => {
-    const request: Express.Request = ctx
+  (
+    data: string | undefined,
+    ctx: ExecutionContext,
+  ) => {
+    const request = ctx
       .switchToHttp()
       .getRequest();
+
+    if (!request.user) {
+      throw new Error(
+        'User not found in request',
+      );
+    }
+
+    if (data) {
+      return request.user[data];
+    }
+
     return request.user;
   },
 );
